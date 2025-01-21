@@ -6,10 +6,9 @@
 <p align="center">
 <a href="#"><img title="GUMDRAMON MULTI DEVICE" src="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%238e44ad&style=for-the-badge"></a>
 </p>
-  
-<a href="https://github.com/pixiel-kiyo/Xros-Gumdramon"><img title="Owner" src="https://img.shields.io/badge/Recode--red.svg?style=for-the-badge&logo=github"></a>
+<a href="https://github.com/zeeoneofficial/Haruka-Md"><img title="Owner" src="https://img.shields.io/badge/Recode-ZeeoneOfc-red.svg?style=for-the-badge&logo=github"></a>
 </p>
-<p align="center">
+
 <a href="https://github.com/pixiel-kiyo/followers"><img title="Followers" src="https://img.shields.io/github/followers/pixiel-kiyo?color=red&style=flat-square"></a>
 <a href="https://github.com/pixiel-kiyo/Xros-Gumdramon/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/pixiel-kiyo/Xros-Gumdramon?color=blue&style=flat-square"></a>
 <a href="https://github.com/pixiel-kiyo/Xros-Gumdramon/network/members"><img title="Forks" src="https://img.shields.io/github/forks/pixiel-kiyo/Xros-Gumdramon?color=red&style=flat-square"></a>
