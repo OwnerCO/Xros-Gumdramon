@@ -1,8 +1,6 @@
 <a href="https://files.catbox.moe/vedauy.jpeg"><img src="https://files.catbox.moe/vedauy.jpeg" alt="Md" border="0"></a>
 </p>
-<p align="center">
-<a href="#"><img title="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%236a0dad&style=for-the-badge"></a>
-</p>
+![GUMDRAMON MULTI DEVICE](https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%236a0dad&style=for-the-badge)
 
 <p align="center">
 <a href="https://github.com/pixiel-kiyo/Xros-Gumdramon"><img title="Owner" src="https://img.shields.io/badge/Recode--red.svg?style=for-the-badge&logo=github"></a>
