@@ -6,6 +6,8 @@
 <p align="center">
 <a href="#"><img title="GUMDRAMON MULTI DEVICE" src="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%238e44ad&style=for-the-badge"></a>
 </p>
+</p>
+<p align="center">
 <a href="https://github.com/zeeoneofficial/Haruka-Md"><img title="Owner" src="https://img.shields.io/badge/Recode-ZeeoneOfc-red.svg?style=for-the-badge&logo=github"></a>
 </p>
 
