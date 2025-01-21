@@ -4,7 +4,7 @@
 
 </p>
 <p align="center">
-<a href="#"><img title="GUMDRAMON MULTI DEVICE" src="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%23a569bd&style=for-the-badge"></a>
+<a href="#"><img title="GUMDRAMON MULTI DEVICE" src="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%23bb8fce&style=for-the-badge"></a>
 </p>
   
 <a href="https://github.com/pixiel-kiyo/Xros-Gumdramon"><img title="Owner" src="https://img.shields.io/badge/Recode--red.svg?style=for-the-badge&logo=github"></a>
