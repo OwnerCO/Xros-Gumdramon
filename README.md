@@ -1,5 +1,7 @@
 <a href="https://files.catbox.moe/vedauy.jpeg"><img src="https://files.catbox.moe/vedauy.jpeg" alt="Md" border="0"></a>
-
+</p>
+<p align="center">
+  
 <a href="https://github.com/pixiel-kiyo/Xros-Gumdramon"><img title="Owner" src="https://img.shields.io/badge/Recode--red.svg?style=for-the-badge&logo=github"></a>
 </p>
 <p align="center">
