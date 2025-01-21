@@ -20,7 +20,7 @@ $ npm start
 ```
 
 
-## `For Ssh And Ubuntu`
+## For Ssh And Ubuntu
 
 ```bash
 
