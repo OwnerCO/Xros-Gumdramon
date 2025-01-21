@@ -10,8 +10,9 @@ $ yarn
 $ npm install
 $ npm start
 ```
+
 # INSTALL 
-Info: For terminal user ( cmd )
+Info: this installation its reor terminal user ( cmd ), This package is really needed to install the WhatsApp bot (Gumdramon MD). Some packages may not be installed except nodejs and git but the bot will not run normally.
 
 * [Node.js](https://nodejs.org/en/)
 * [Git](https://git-scm.com/downloads)
