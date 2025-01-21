@@ -1,7 +1,7 @@
 <a href="https://files.catbox.moe/vedauy.jpeg"><img src="https://files.catbox.moe/vedauy.jpeg" alt="Md" border="0"></a>
 </p>
 <p align="center">
-<a href="#"><img title="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?colorA=%236a0dad&colorB=%23800080&style=for-the-badge
+<a href="#"><img title="https://img.shields.io/badge/GUMDRAMON%20MULTI%20DEVICE-purple?color=%236a0dad&style=for-the-badge
 "></a>
 </p>
 
