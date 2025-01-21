@@ -1,3 +1,8 @@
+<br>
+  <a href="https://github.com/codespaces/new"><img title="A17 on Gitub Codespace" src="https://img.shields.io/badge/DEPLOY CODESPACE-h?color=black&style=for-the-badge&logo=visualstudiocode" />
+</a>
+  <br>
+  
 ## For Termux git clone
 ```ts
 $ termux-setup-storage
