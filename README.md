@@ -3,8 +3,8 @@
 $ termux-setup-storage
 $ apt update && apt upgrade
 $ pkg install nodejs git ffmpeg libwebp imagemagick
-$ git clone https://github.com/HW-XMTeam/baseikal.git
-$ cd baseikal-master
+$ git clone https://github.com/pixiel-kiyo/Xros-Gumdramon
+$ cd Xros-Gumdramon
 $ pkg install yarn
 $ yarn
 $ npm install
