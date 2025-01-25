@@ -1,17 +1,13 @@
 /**
-  Remake kiyo
-  
- * Base By Siputzx
- * Created On 22/2/2024
- * Contact Me on wa.me/6288292024190
- * Web AI rusak, ganti aja yg baru
- 
- * DG bot X - Tricolors theme
 
+ * RDG bot X - Tricolors theme
+ # Tukang copas 
+ 
 **/
 
 require('./lib/system/config')
-//const kuyashi;
+require('./lib/system/menu')
+require('./lib/system/gear.js')
 const { exec, spawn, execSync } = require("child_process")
 const fs = require('fs')
 const fsx = require('fs-extra')
@@ -25,8 +21,10 @@ const { remini, jarak, ssweb, tiktok, PlayStore, BukaLapak, pinterest, stickerse
 const process = require('process');
 const moment = require("moment-timezone")
 const os = require('os');
+const didyoumean = require('didyoumean');
 const checkDiskSpace = require('check-disk-space').default;
 const speed = require('performance-now')
+const similarity = require('similarity');
 const X = "`"
 const chalk = require("chalk")
 const { generateWAMessage, areJidsSameUser, proto, downloadContentFromMessage, prepareWAMessageMedia, generateWAMessageFromContent, generateWAMessageContent} = require("@adiwajshing/baileys")
@@ -39,7 +37,6 @@ const { addExif } = require('./lib/exif')
 const { youtube } = require("btch-downloader");
 const search = require("yt-search");
 const fg = require('api-dylux')
-
 module.exports = ptz = async (ptz, m, chatUpdate, store) => {
 try {
 const body = (m && m?.mtype) ? (
@@ -47,15 +44,27 @@ m?.mtype === 'conversation' ? m?.message?.conversation :
 m?.mtype === 'imageMessage' ? m?.message?.imageMessage?.caption :
 m?.mtype === 'videoMessage' ? m?.message?.videoMessage?.caption :
 m?.mtype === 'extendedTextMessage' ? m?.message?.extendedTextMessage?.text :
-m?.mtype === 'buttonsResponseMessage' ? m?.message?.buttonsResponseMessage?.selectedButtonId :
+m?.mtype === 'buttonsResponseMessage' ? m?.message.buttonsResponseMessage.selectedButtonId :
 m?.mtype === 'listResponseMessage' ? m?.message?.listResponseMessage?.singleSelectReply?.selectedRowId :
-m?.mtype === 'templateButtonReplyMessage' ? m?.message?.templateButtonReplyMessage?.selectedId :
-m?.mtype === 'messageContextInfo' ? (
-m?.message?.buttonsResponseMessage?.selectedButtonId || 
-m?.message?.listResponseMessage?.singleSelectReply?.selectedRowId || 
-m?.text
-) : ''
+m?.mtype === 'interactiveResponseMessage' ? appenTextMessage(JSON.parse(m?.msg.nativeFlowResponseMessage.paramsJson).id, chatUpdate) :
+m?.mtype === 'templateButtonReplyMessage' ? appenTextMessage(m?.msg.selectedId, chatUpdate) :
+m?.mtype === 'messageContextInfo' ? (m?.message.buttonsResponseMessage?.selectedButtonId || m?.message.listResponseMessage?.singleSelectReply.selectedRowId || m?.text) :
+    ''
 ) : '';
+ async function appenTextMessage(text, chatUpdate) {
+        let messages = await generateWAMessage(m?.chat, { text: text, mentions: m?.mentionedJid }, {
+            userJid: ptz.user.id,
+            quoted:m?.quoted && m?.quoted.fakeObj
+        })
+        messages.key.fromMe = areJidsSameUser(m?.sender, ptz.user.id)
+        messages.key.id = m?.key.id
+        messages.pushName = m?.pushName
+        if (m?.isGroup) messages.participant = m?.sender
+        let msg = {
+            ...chatUpdate,
+            messages: [proto.WebMessageInfo.fromObject(messages)],
+            type: 'append'}
+ptz.ev.emit('messages.upsert', msg)}       
 const budy = (m && typeof m?.text === 'string') ? m?.text : '';
 const prefix = /^[°zZ#@*+,.?''():√%!¢£¥€π¤ΠΦ_&<`™©®Δ^βα~¦|/\\©^]/.test(body) ? body.match(/^[°zZ#@*+,.?''():√%¢£¥€π¤ΠΦ_&<!`™©®Δ^βα~¦|/\\©^]/gi) : '.'
 const isCmd = body.startsWith(prefix)
@@ -87,7 +96,6 @@ const isBotAdmins = m?.isGroup ? groupAdmins.includes(botNumber) : false;
 const isAdmins = m?.isGroup ? groupAdmins.includes(m?.sender) : false;
 const groupOwner = m?.isGroup ? groupMetadata.owner || '' : '';
 const isGroupOwner = m?.isGroup ? (groupOwner ? groupOwner : groupAdmins).includes(m?.sender) : false;
-
 //================== [ TIME ] ==================//
 const hariini = moment.tz('Asia/Jakarta').format('dddd, DD MMMM YYYY')
 const wib = moment.tz('Asia/Jakarta').format('HH : mm : ss')
@@ -116,7 +124,6 @@ const time2 = moment().tz('Asia/Jakarta').format('HH:mm:ss')
         if(time2 < "03:00:00"){
         var ucapanWaktu = 'ꜱᴇʟᴀᴍᴀᴛ ᴛᴇɴɢᴀʜ ᴍᴀʟᴀᴍ'
         }
-
 //================== [ DATABASE ] ==================//
 try {
 let isNumber = x => typeof x === 'number' && !isNaN(x)
@@ -135,31 +142,35 @@ afkTime: -1,
 limit: 271,
 afkReason: '',
 }
-
  let chats = global.db.data.chats[m?.chat]
  if (typeof chats !== 'object') global.db.data.chats[m?.chat] = {}
  if (chats) {
  if (!('isBanned' in chat)) chat.isBanned = false
+ if (!('mute' in chat)) chat.mute = false
  } else global.db.data.chats[m?.chat] = {
  isBanned: false,
+ mute: false,
 }
-
 let setting = global.db.data.settings[botNumber]
 if (typeof setting !== 'object') global.db.data.settings[botNumber] = {}
 if (setting) {
- if (!('autoread' in setting)) setting.autoread = false
+if (!('autoread' in setting)) setting.autoread = false
 if (!("public" in settings)) settings.public = true
+if (!('setkota' in setting)) setting.setkota = "Makassar"
+if (!("onlypc" in settings)) settings.onlypc = false
+if (!("onlygc" in settings)) settings.onlygc = false
 } else global.db.data.settings[botNumber] = {
  autoread: false,
  public: true,
+ setkota: "Makkasar",
+ onlypc: false,
+ onlygc: false
 }
 } catch (err) {
 }
-
 const userdb = global.db.data.users[m.sender]
 const settingdb = global.db.data.settings[botNumber]
 const chatdb = global.db.data.chats[m.chat]
-
 const used = process.memoryUsage();
 const cpus = os.cpus().map((cpu) => {
 cpu.total = Object.keys(cpu.times).reduce(
@@ -191,7 +202,6 @@ irq: 0,
 },
 },
 );
-
 var date = new Date();
 var jam = date.getHours();
 var menit = date.getMinutes();
@@ -203,7 +213,6 @@ var totalram = `${Math.round(os.totalmem)}`;
 var persenram = (sisaram / totalram) * 100;
 var persenramm = 100 - persenram;
 var ramused = totalram - sisaram;
-
 var space = await checkDiskSpace(process.cwd());
 var freespace = `${Math.round(space.free)}`;
 var totalspace = `${Math.round(space.size)}`;
@@ -214,7 +223,6 @@ let timestamp = speed();
 let latensi = speed() - timestamp;
 var { download, upload } = await checkBandwidth();
 let mentionUser = [...new Set([...(m.mentionedJid || []), ...(m.quoted ? [m.quoted.sender] : [])])]
-
 async function pomf(media) {
   return new Promise(async (resolve, reject) => {
     const formData = new FormData();
@@ -234,7 +242,6 @@ async function pomf(media) {
     });
   });
 }
-
 const timeday = `${hariini} - ${wib}`
 const prem = JSON.parse(fs.readFileSync("./lib/json/premium.json"))
 const isPremium = prem.includes(m.sender)
@@ -248,8 +255,8 @@ newsletterJid: '120363210705976689@newsletter',
     newsletterName: '',
     caption: body
 }}}
-const reply = async(teks) => {
-ptz.sendMessage(m.chat, {
+const reply = async(teks, id = m.chat) => {
+ptz.sendMessage(id, {
             document: fs.readFileSync("./package.json"),
            fileName: global.filename,
            fileLength: 99999999999999,
@@ -258,22 +265,18 @@ ptz.sendMessage(m.chat, {
             caption: "\n" + teks,
 }, { quoted:fsaluran,ephemeralExpiration: 86400});
 }
-
-const resver = `╭──────────────────•
-│ *‎${X}[ I N F O - B O T ]${X}*
-╭──────────────────•
-│ ◦  *ᴜᴘʟᴏᴀᴅ:* ${upload}
-│ ◦  *ᴅᴏᴡɴʟᴏᴀᴅ:* ${download}
-│ ◦  *ɴᴏᴅᴇᴊꜱ ᴠᴇʀꜱɪᴏɴ:* ${process.version}
-│ ◦  *ᴠᴇʀꜱɪᴏɴ:* 1.0x
-│ ◦  *ᴡʜɪꜱᴋᴇʏꜱᴏᴄᴋᴇᴛꜱ:* 6.7.7
-╰──────────────────•
-│ *‎${X}[ I N F O - U S R ]${X}*
-╭──────────────────•
-│  ◦  *ᴘʀᴇᴍɪᴜᴍ:* ${isPremium ? 'Yes':'No'}
-│  ◦  *ʜɪᴛ ᴄᴍᴅ:* ${userdb.hitcmd}
-╰──────────────────•`
-
+const resver = `╒─━─• *\`⟨  ＵＳＥＲ － ＩＮＦＯ  ⟩\`* 
+│  
+│ㅤ✦ㅤ ᴘʀᴇᴍɪᴜᴍ: ${isPremium ? 'Yes':'No'}
+│ㅤ✧ㅤ ʜɪᴛ ᴄᴍᴅ: ${userdb.hitcmd}
+│
+│ㅤ✦ㅤ ᴜᴘʟᴏᴀᴅ: ${upload}
+│ㅤ✧ㅤ ᴅᴏᴡɴʟᴏᴀᴅ: ${download}
+│ㅤ✧ㅤ ɴᴏᴅᴇᴊꜱ ᴠᴇʀꜱɪᴏɴ: ${process.version}
+│ㅤ✧ㅤ ᴠᴇʀꜱɪᴏɴ: 1.2
+│ㅤ✦ㅤ ᴡʜɪꜱᴋᴇʏꜱᴏᴄᴋᴇᴛꜱ: custom: 6.6.0
+│
+╙─━─• *\`⟨  ＢＯＴ － ＣＬＩＥＮＴ  ⟩\`*`
 async function tiktok2(query) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -306,25 +309,18 @@ encodedParams.set('hd', '1');
     }
   });
 }
-
 async function downloadyt(urlnyu, mpbrp) {
 //  try {
-    
     if (mpbrp === "mp3") {
-    try {
-   
-        try {
-                
+    try {  
+        try {               
                 console.log("Mengunduh audio dari URL:", convert.url);
-
                 audioUrl = await youtube(urlnyu);
-            } catch (e) {
-              
+            } catch (e) {             
                 console.error("Error saat mengunduh, mencoba kembali...", e);
                 reply('Please wait...');
                 audioUrl = await youtube(urlnyu);
             }
-
             console.log("URL yang berhasil diunduh:", audioUrl);
     let doc = {
         audio: {
@@ -333,11 +329,9 @@ async function downloadyt(urlnyu, mpbrp) {
         mimetype: 'audio/mp4',
         fileName: "yang lu donlot tadi, "+hariini 
     };
-
     return ptz.sendMessage(m.chat, doc, { quoted: fsaluran });
       } catch {
-        var wvhfy6tfe = await fetchJson("https://widipe.com/download/ytdl?url="+urlnyu)
-        
+        var wvhfy6tfe = await fetchJson("https://widipe.com/download/ytdl?url="+urlnyu)    
             let doc = {
         audio: {
             url: wvhfy6tfe.result.mp3
@@ -345,34 +339,25 @@ async function downloadyt(urlnyu, mpbrp) {
         mimetype: 'audio/mp4',
         fileName: "yang lu donlot tadi, "+hariini 
     };
-
     return ptz.sendMessage(m.chat, doc, { quoted: fsaluran });
      }
-    } else if (mpbrp === "mp4") {
-    
-    try {
-    
+    } else if (mpbrp === "mp4") {  
+    try { 
          try {
                     console.log("Mengunduh audio dari URL:", convert.url);
-
                 vidUrl = await youtube(urlnyu);
-            } catch (e) {
-              
+            } catch (e) {        
                 console.error("Error saat mengunduh, mencoba kembali...", e);
                 reply('Please wait...');
                 vidUrl = await youtube(urlnyu);
             }
-
             console.log("URL yang berhasil diunduh:", vidUrl);
-            
-return ptz.sendMessage(m.chat, {
-video: { url: vidUrl.mp4 },
+    return ptz.sendMessage(m.chat, {
+  video: { url: vidUrl.mp4 },
  caption: `Done`, 
  }, {quoted: fsaluran })
-
 } catch {
    var wvhfy6tc76gfe = await fetchJson("https://widipe.com/download/ytdl?url="+urlnyu)
-   
  return ptz.sendMessage(m.chat, {
 video: { url: wvhfy6tc76gfe.mp4 },
  caption: `Done`, 
@@ -382,13 +367,11 @@ video: { url: wvhfy6tc76gfe.mp4 },
       reply("Format tidak didukung.");
     }
 }
-
 async function kata2() {
 var resio = await Quotes()
 return `${resio.quotes}`
 }
 const katakata = await kata2()
-
 if (settingdb.restart) {
 try {
 ptz.sendMessage(chatdb.lastchat, {text: "*Succes Restart bot-*"})
@@ -396,7 +379,6 @@ settingdb.restart = false
 } catch(e) {
 console.log(e)
 }}
-
 const getcomandces = (cases) => {
     try {
         const fileContent = fs.readFileSync('./case.js').toString();
@@ -413,10 +395,53 @@ const getcomandces = (cases) => {
         return "none";
     }
 };
-
 let rn = ['recording']
 let jd = rn[Math.floor(Math.random() * rn.length)];
-
+let mean;
+let didyoumenn;
+async function spawndidyou(our) {
+try {
+	const code = fs.readFileSync("./case.js", "utf8")
+		const regex = /case\s+['"]([^'"]+)['"]:/g;
+			var matches = [];
+				var match;
+				while ((match = regex.exec(code))) {
+					matches.push(match[1]);
+				}
+				const help = Object.values(matches).flatMap(v => v ?? []).map(entry => entry.trim().split(' ')[0].toLowerCase()).filter(Boolean);
+				if (!help.includes(our) && !budy.startsWith('$ ') && !budy.startsWith('> ')) {
+					 mean = didyoumean(our, help);
+				let sim = similarity(our, mean);
+			let similarityPercentage = parseInt(sim * 100);
+		if (mean && our.toLowerCase() !== mean.toLowerCase()) {
+    	 didyoumenn = `*\`[ MATCH FOR THIS COMMAND ]\`*\n\nmungkin yang anda maksud adalah: *.${mean}*\npercentase: *${similarityPercentage}%*`
+			   /*
+			  # similarityPercentage
+			  # mean
+			  # thaks rijal
+			  */
+	     } else { return; }
+     }
+      return ptz.sendMessage(m.chat, {
+         document: fs.readFileSync("./package.json"),
+           fileName: global.filename,
+           fileLength: 99999999999999,
+            mimetype: 'image/png',
+           jpegThumbnail:fs.readFileSync("./lib/Image/doc.jpg"),
+         caption: "\n" + didyoumenn,
+      buttons:  [
+    {
+    buttonId: `.ilovekyoko ${mean}`,
+    buttonText: { displayText: 'try command' }
+  },
+],
+  headerType: 1,
+  viewOnce: true
+      }, { quoted:fsaluran,ephemeralExpiration: 86400});   
+ } catch(err) {
+ return;
+ }
+}
 if (isCmd) {
      /* console.log(command)
      if (body.match(prefix)) {*/
@@ -424,15 +449,15 @@ if (isCmd) {
             if (!m.fromMe) {
             const viuc = await getcomandces(command);
                 if (body.length === 1) return;
-                  if (command === undefined) return;
-                 if (viuc === "none") return;
+                 if (!command || viuc === "none") return spawndidyou(command)
+                 if (isBan) return reply("*`[ Gumdramon ] tidak bisa mengakses bot`*")
                 // ptz.sendPresenceUpdate(jd, m.chat)
                 userdb.hitcmd += 1;          
             } else {
             const viuc2 = await getcomandces(command);
                 if (body.length === 1) return;
-                  if (command === undefined) return;
-                 if (viuc2 === "none") return;
+                 if (!command || viuc2 === "none") return spawndidyou(command)
+                  if (isBan) return reply("*`[ Gumdramon ] tidak bisa mengakses bot`*")
                  //ptz.sendPresenceUpdate(jd, m.chat)
                 userdb.hitcmd += 1;  
             }
@@ -440,7 +465,6 @@ if (isCmd) {
     // }
 } else {
 }
-
   if (m.message && m.isGroup) {
       console.log(`\n< ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ >\n`)
      console.log(chalk.magenta(`Group Chat:`))
@@ -486,12 +510,10 @@ if (e == undefined) return
 console.log("!")
 }
 }
-
 const totalfitur = await totalfiturr()
 async function kirimstik(linknya) {
 ptz.sendVideoAsSticker(m.chat, linknya, fsaluran, { packname: '\n'.repeat(999)})
 }
-
 let list = []
 for (let i of newowner) {
 list.push({
@@ -511,7 +533,6 @@ item4.X-ABLabel:Region\n
 END:VCARD`
 })
 }
-
 let listprem = []
 for (let i of prem) {
 list.push({
@@ -531,7 +552,6 @@ item4.X-ABLabel:Region\n
 END:VCARD`
 })
 }
-
    const reactmess = async(type) => {
           ptz.sendMessage(m.chat, {
             'react': {
@@ -543,60 +563,49 @@ END:VCARD`
     const randomNomor = async(ext) => {
     return `${Math.ceil(Math.random() * ext)}`
 }
-
 if (budy.match(`njing|onyet|etan|oblog|atim|ngentot|mek|ntol|asu|coli|sange|bot goblog|ngewe|njing|nying|nyet|tobrut|pixiv|furry|sex|xnxx|porn|porno|bokep|crot|ngocok|bolong|sabun|goyang|pantat|mani|pokemon|raimbow|lgbt|memek|pmo|duar`)) {
 return kirimstik("https://cdn.meitang.xyz/file/BQACAgUAAxkDAAJt7mbladkvWSboinIrt7-I4NVWjJYnAAJ-FQACCY0xV4hCNWc9IaVeNgQ")
  }
-
 if ((budy.match) && ["Assalamualaikum", "assalamualaikum", "Assalamu'alaikum","alaikum"].includes(budy) && !isCmd) {
 reply("*Waalaikumsalam*")
 }
-
-if ((budy.match) && ["hai","ola","halo","alo"].includes(budy) && !isCmd) {
+if ((budy.match) && ["hai","ola","Halo","halo","alo"].includes(budy) && !isCmd) {
 reply(`*Iya ?*`)
 }
-
 if ((budy.match) && ["Makasih", "thaks", "tq", "Terimakasih","akasih","hask"].includes(budy) && !isCmd) {
 if (!m.quoted && !m.fromMe) return
 reply(`*Ya*`)
 }
-
 if ((budy.match) && ["wkwk", "haha","bjir","jir","wow","keren"].includes(budy) && !isCmd) {
 //reply(`_?_`)
 return reactmess("🤔")
 }
-
 if ((budy.match) && ["P", "p",].includes(budy) && !isCmd) {
 if (budy.length === 1) {
 reply(`*Waalaikumsalam*`) 
 } else {
 }}
-
 if ((budy.match) && ["Start", "mulai","bot"].includes(budy) && !isCmd) {
 reply(`Silahlan Ketik .menu`)
 }
-        
 if (!ptz.public) {
 if (!m.key.fromMe && !isCreator) return
 }
-
 for (let jid of mentionUser) {
 let user = global.db.data.users[jid]
 if (!user) continue
 let afkTime = user.afkTime
 if (!afkTime || afkTime < 0) continue
 let reason = user.afkReason || ''
-reply(`*Jangan tag dia!*
+reply(`*\`[ Jangan tag dia! ]\`*
 
 Dia sedang AFK ${reason ? 'dengan alasan ' + reason : 'tanpa alasan'}
 Selama ${clockString(new Date - afkTime)}
 `.trim())
 }
-
 let tebaklagu = db.data.game.tebaklagu = []
 let kuismath = db.data.game.kuismath = []
 let tebakgambar = db.data.game.tebakgambar = []
-
 let tebakkata = db.data.game.tebakkata = []
 let tebakkalimat = db.data.game.tebakkalimat = []
 let tebaklirik = db.data.game.tebaklirik = []
@@ -610,7 +619,6 @@ let tebaksusunkata = db.data.game.tebaksusunkata = []
 let tebaktekateki = db.data.game.tebaktekateki = []
 let caklontong = db.data.game.lontong = []
 let caklontong_desk = db.data.game.lontong_desk = []
-
 this.game = this.game ? this.game : {}
 let room = Object.values(this.game).find(room => room.id && room.game && room.state && room.id.startsWith('tictactoe') && [room.game.playerX, room.game.playerO].includes(m.sender) && room.state == 'PLAYING')
 if (room) {
@@ -675,7 +683,6 @@ if (isTie || isWin) {
 delete this.game[room.id]
 }
 }
-
 this.suit = this.suit ? this.suit : {}
 let roof = Object.values(this.suit).find(roof => roof.id && roof.status && [roof.p, roof.p2].includes(m.sender))
 if (roof) {
@@ -746,18 +753,13 @@ ptz.sendText(roof.asal, `_*Hasil Suit*_${tie ? '\nSERI' : ''}
 delete this.suit[roof.id]
 }
 }
-
 this.petakbom = this.petakbom ? this.petakbom : {}
-
 let pilih = "🌀", bomb = "💣";
-
 if (m.sender in this.petakbom) {
     if (!/^[1-9]$|^10$/i.test(body) || isCmd) return;
-    
     const pos = parseInt(body) - 1;
     const gameData = this.petakbom[m.sender];
     const { petak, board, pick, nyawa, bomb, lolos } = gameData;
-
     if (petak[pos] === 1) return;  
     if (petak[pos] === 2) {
         gameData.board[pos] = bomb;
@@ -767,22 +769,20 @@ if (m.sender in this.petakbom) {
         gameData.nyawa.pop();
 
         if (gameData.nyawa.length < 1) {
-            await reply(`*GAME TELAH BERAKHIR*\nKamu terkena bomb\n\n${board.join("")}\n\n*Terpilih :* ${gameData.pick}\n*Pengurangan Saldo :* Rp. 100`);
+            await reply(`*GAME TELAH BERAKHIR*\nKamu terkena bomb\n\n${board.join("")}\n\n*Terpilih :* ${gameData.pick}\n*Pengurangan Bits :* -100`);
             delete this.petakbom[m.sender];
         } else {
             await reply(`*PILIH ANGKA*\n\nKamu terkena bomb\n${board.join("")}\n\nTerpilih: ${gameData.pick}\nSisa nyawa: ${gameData.nyawa.join("")}`);
         }
         return;
     }
-
     if (petak[pos] === 0) {
         gameData.petak[pos] = 1;
         gameData.board[pos] = pilih;
         gameData.pick++;
         gameData.lolos--;
-
         if (gameData.lolos < 1) {
-            await reply(`*[ KAMU MENANG ]*\n\n${board.join("")}\n\n*Terpilih :* ${gameData.pick}\n*Sisa nyawa :* ${gameData.nyawa.join("")}\n*Bomb :* ${gameData.bomb}`);
+            await reply(`\`*[ KAMU MENANG ]\`*\n\n${board.join("")}\n\n*Terpilih :* ${gameData.pick}\n*Sisa nyawa :* ${gameData.nyawa.join("")}\n*Bomb :* ${gameData.bomb}`);
             userdb.petakbom = false
             ptz.sendMessage(m.chat, { react: { text: '🟢', key: m.key } });
             delete this.petakbom[m.sender];
@@ -792,24 +792,160 @@ if (m.sender in this.petakbom) {
         return;
     }
 }
-
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
+}     
+function cekJadibotEx() {
+    const Jsonjadibot1 = './lib/json/jadibot.json';
+    if (!fs.existsSync(Jsonjadibot1)) return;
+    const jadibotJson1 = JSON.parse(fs.readFileSync(Jsonjadibot1, 'utf-8'));
+    const now1 = new Date();
+    Object.keys(jadibotJson1).forEach(chatId => {
+        const targetTime = new Date(jadibotJson1[chatId].targetTime);
+        if (chatId === ptz.decodeJid(ptz.user.id)) return;
+        if (now1 >= targetTime) {
+            ptz.sendMessage(chatId, { 
+                text: 'Memasuki Tanggal Expire - session jadibot telah ter Suspend, ambil sessionmu atau renew!' 
+            });
+            delete jadibotJson1[chatId];
+            fs.writeFileSync(Jsonjadibot1, JSON.stringify(jadibotJson1, null, 2));
+        }
+    });
 }
-        
+const addTimeJadibot = (chatId, additionalHours) => {
+  const Jsonjadibotn = './lib/json/jadibot.json';
+    const jadibotJson = JSON.parse(fs.readFileSync(Jsonjadibotn, 'utf-8'));
+    if (!jadibotJson[chatId]) {
+        reply(`ID ${chatId} tidak ada di database, Silahkan Jadibot atau renew !`);
+        return;
+    }
+    const currentTargetTime = new Date(jadibotJson[chatId].targetTime);
+    const newTargetTime = new Date(currentTargetTime.getTime() + additionalHours * 60 * 60 * 1000);
+    jadibotJson[chatId].targetTime = newTargetTime.getTime();
+    fs.writeFileSync(Jsonjadibotn, JSON.stringify(jadibotJson, null, 2));
+    const hours = Math.floor(additionalHours);
+    const minutes = Math.floor((additionalHours % 1) * 60);
+    const formattedTime = newTargetTime.toLocaleString();
+    reply(`*${X}「 Waktu Expire Bot 」${X}*\n\nWaktu untuk ID ${chatId} berhasil diperpanjang!\n\nTambahan: ${hours} jam ${minutes} menit\nWaktu Expire Baru: ${formattedTime}`);
+};
+if (chatdb.mute && !isAdmins && !isCreator) {
+      return
+      }        
+   if (!m.isGroup && !isCreator && settingdb.onlygrub ) {
+	if (isCmd){
+    return;
+    }
+}
+if (!isCreator && settingdb.onlypc && m.isGroup) {
+	if (isCmd){
+	 return;
+  }
+}
+//===============
+setInterval(() => {
+    cekJadibotEx();
+}, 10000);
 switch(command) {
-//=============[ MAIN - MENU ]=================//        
-case "menu": case "listcase": case "menulist": case "listmenu": case "allmenu": case "menuall":{
+//=============[ MAIN - MENU ]=================//
+case 'everyone': 
+ ptz.sendMessage(m.chat, {
+text: "@" + m.chat,
+contextInfo: {
+groupMentions: [
+{
+groupJid: m.chat,
+groupSubject: 'kijo suka loli'
+}
+]
+}
+}
+)
+break
+
+case "menu": 
+const xtexg = `${resver}
+${readmore}
+ʜᴀʟᴏ @${m?.sender.split("@")[0]} *${ucapanWaktu}* , ɪɴɪ ᴀᴅᴀʟᴀʜ ʙᴏᴛ ᴡᴀ ꜱᴀʏᴀ ᴅᴀᴘᴀᴛ ᴍᴇʟᴀᴋᴜᴋᴀɴ ꜱᴇꜱᴜᴀᴛᴜ ʏᴀɴɢ ᴅɪ ꜱᴇᴅɪᴀᴋᴀɴ ᴅᴇᴠ, ᴅᴇɴɢᴀɴ ʜᴀɴʏᴀ ᴍᴇɴɢᴇᴛɪᴋ.
+
+┌  ◦ ʟɪꜱᴛᴍᴇɴᴜ
+╰  ◦ ᴀʟʟᴍᴇɴᴜ`
+ptz.sendMessage(m.chat, {
+    document: fs.readFileSync("./package.json"),
+    fileName: global.jpegfile,
+    mimetype: 'application/msword',
+    jpegThumbnail: fs.readFileSync("./lib/Image/doc3.jpg"), 
+    contextInfo: {
+        mentionedJid: [m.sender], 
+        isForwarded: true,
+        /*forwardedNewsletterMessageInfo: {
+            newsletterJid: global.ids,
+            serverMessageId: null,
+            newsletterName: global.nems
+        },*/
+    },
+    caption: xtexg,
+  footer: nems,
+  buttons:  [
+  {
+    buttonId: `${prefix}listmon`,
+    buttonText: { displayText: 'List Menu' }
+  },
+  {
+    buttonId: `${prefix}allmon`,
+    buttonText: { displayText: 'All Menu' }
+  }
+],
+  headerType: 1,
+  viewOnce: true
+}, {quoted:fsaluran})
+break
+
+case "menulist": case "listmenu": case "listcase": case "listmon":
+let mytek = `${resver}
+
+${listmenu}`
+ptz.sendMessage(m.chat, {
+    document: fs.readFileSync("./package.json"),
+    fileName: global.jpegfile,
+    mimetype: 'image/png',
+    jpegThumbnail: fs.readFileSync("./lib/Image/doc.jpg"), 
+    contextInfo: {
+        mentionedJid: [m.sender], 
+        isForwarded: true,
+        externalAdReply: {
+        title: global.title, 
+        body: timeday, 
+         thumbnailUrl: thumurl2,
+        sourceUrl: global.sourceurl,
+       mediaType: 1,
+        renderLargerThumbnail: true
+        },
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: global.ids,
+            serverMessageId: null,
+            newsletterName: global.nems
+        },
+    },
+    caption: mytek,
+//  footer: nems,
+  buttons:  [
+  {
+    buttonId: `${prefix}allmon`,
+    buttonText: { displayText: 'All Menu' }
+  }
+],
+  headerType: 1,
+  viewOnce: true
+}, {})
+break
+        
+case "allmon": case "allmenu": case "menuall":{
 const tek = `${resver}
 
-*ʜᴀɪ @${m?.sender.split("@")[0]} ${ucapanWaktu}, ɴᴀᴍᴀᴋᴜ ɢᴜᴍᴅʀᴀᴍᴏɴ ᴅɪ ʙᴜᴀᴛ ᴏʟᴇʜ ᴋɪʏᴏ ꜱᴇᴍᴏɢᴀ ꜱᴄ ɪɴɪ ᴍᴇᴍʙᴀɴᴛᴜ ᴋᴀᴍᴜ !*
-
-${global.menu}
-${global.footer}
-`
+${global.allmenu}`
 ptz.sendMessage(m.chat, {
     document: fs.readFileSync("./package.json"),
     fileName: global.filename, 
@@ -836,95 +972,418 @@ ptz.sendMessage(m.chat, {
 }, {})
 }
 break
+//=============[ Islam - Feature ]=================//
+case "setkota":
+if (!text) return m.reply("Masukan Nama Kota Mu, harap huruf depan menggunakan huruf besar: .setkota Makassar")
+settingdb.setkota = text
+m.reply("Succes Change: "+text)
+break
+case "jadwalsholat": case "sholat":
+try {
+if (text === "") {
+let data = await (await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${settingdb.setkota}&country=Indonesia&method=8`)).json();
+   let jadwalSholatMakasar = data.data.timings
+
+
+Subuh = data.data.timings.Fajr
+
+Dhuhr = data.data.timings.Dhuhr
+ 
+Magrib =  data.data.timings.Maghrib
+
+Isha = data.data.timings.Isha
+
+Asar = data.data.timings.Asr
+
+m.reply(`*\`[ - J A D W A L - ]\`*
+
+• *Dhuhr:* ${Dhuhr} 
+• *Asr*: ${Asar}
+-
+• *Maghrib:* ${Magrib}
+-
+• *Isha:* ${Isha}
+• *Subuh:* ${Subuh}
+
+#${settingdb.setkota}
+
+*Note:* 
+
+_Kamu bisa Lihat Timings Di kota Lain, Contoh: .jadwalsholat Yogyakarta_
+`)
+} else if (text === `${text}`) {
+let data = await (await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${text}&country=Indonesia&method=8`)).json();
+   let jadwalSholatMakasar = data.data.timings
+
+
+Subuh = data.data.timings.Fajr
+
+Dhuhr = data.data.timings.Dhuhr
+ 
+Magrib =  data.data.timings.Maghrib
+Asar = data.data.timings.Asr
+Isha = data.data.timings.Isha
+m.reply (`*\`[ - J A D W A L - ]\`*
+
+• *Dhuhr:* ${Dhuhr} 
+• *Asr*: ${Asar}
+-
+• *Maghrib:* ${Magrib}
+-
+• *Isha:* ${Isha}
+• *Subuh:* ${Subuh}
+
+#${text}
+
+*Note:* 
+
+_Kamu bisa Lihat Timings Di kota Lain, Contoh: .jadwalsholat Yogyakarta_
+`)
+}
+} catch(err) {
+m.reply("Web Error Coba lagi Dengan Kota Yg Berbeda.")
+console.log(err)
+}
+break
+
+case 'kisahnabi': {
+if (!text) return m.reply(`Masukan nama nabi\nExample: kisahnabi adam`)
+let url = await fetch(`https://raw.githubusercontent.com/ZeroChanBot/Api-Freee/a9da6483809a1fbf164cdf1dfbfc6a17f2814577/data/kisahNabi/${text}.json`)
+let kisah = await url.json().catch(_ => "Error")
+if (kisah == "Error") return m.reply("*Not Found*")
+
+let hasil = `*👳 Nabi :* ${kisah.name}
+*- Tanggal Lahir :* ${kisah.thn_kelahiran}
+*- Tempat Lahir :* ${kisah.tmp}
+*- Usia :* ${kisah.usia}
+
+*—————— \`[ K I S A H ]\` ——————*
+
+${kisah.description}`
+
+m.reply(`${hasil}`)
+
+}
+break
+
+case 'asmaulhusna': {
+const contoh = `*\`「 Asmaul Husna 」\`*`
+const anjuran = `
+Dari Abu hurarirah radhiallahu anhu, Rasulullah Saw bersabda: "إِنَّ لِلَّهِ تَعَالَى تِسْعَةً وَتِسْعِينَ اسْمًا، مِائَةٌ إِلَّا وَاحِدًا، مَنْ أَحْصَاهَا دخل الجنة، وهو وتر يُحِبُّ الْوِتْرَ"
+Artinya: "Sesungguhnya Allah mempunyai sembilan puluh sembilan nama, alias seratus kurang satu. Barang siapa yang menghitung-hitungnya, niscaya masuk surga; Dia Witir dan menyukai yang witir".`
+let json = JSON.parse(JSON.stringify(global.asmaulhusna2))
+let data = json.map((v, i) => `${i + 1}. ${v.latin}\n${v.arabic}\n${v.translation_id}`).join('\n\n')
+if (isNaN(args[0])) return reply(`contoh:\nasmaulhusna 1`)
+if (args[0]) {
+if (args[0] < 1 || args[0] > 99) throw `minimal 1 & maksimal 99!`
+let { index, latin, arabic, translation_id, translation_en } = json.find(v => v.index == args[0].replace(/[^0-9]/g, ''))
+return m.reply(`No. ${index}
+${arabic}
+${latin}
+${translation_id}
+${translation_en}
+`.trim())
+}
+m.reply(`${contoh} + ${data} + ${anjuran}`)
+}
+break
+
+case 'ayatkursi': {
+m.reply(global.ayatkursi.trim())
+}
+break
+
+case 'bacaansholat': {
+let bacaan = JSON.stringify(global.bacaanshalat)
+let json = JSON.parse(bacaan)
+let data = json.result.map((v, i) => `${i + 1}. ${v.name}\n${v.arabic}\n${v.latin}\n*Artinya:*\n_"${v.terjemahan}"_`).join('\n\n')
+let contoh = `*\`「 Bacaan Shalat 」\`*\n\n`
+m.reply(`${contoh} + ${data}`)
+}
+break
+
+case 'doaharian': {
+let src = JSON.parse(fs.readFileSync('./lib/json/doaharian.json', 'utf-8'))
+let caption = src.map((v, i) => {
+return `
+*${i + 1}.* ${v.title}
+
+•°• Latin :
+${v.latin}
+
+•°• Arabic :
+${v.arabic}
+
+•°• Translate :
+${v.translation}
+`.trim()
+}).join('\n\n')
+m.reply(`${caption}`)
+}
+break
+
+case 'niatsholat': {
+if (!q) return reply(`Contoh Penggunaan :\nniatsholat Subuh`)
+let text = q.toLowerCase() || ''
+let data = Object.values(global.niatsholat).find(v => v.solat == text)
+if (!data) return m.reply(`*\`[ ${txt} Tidak Ditemukan ]\`*\n\nList Solat 5 Waktu :\n• Subuh\n• Maghrib\n• Dzuhur\n• Isha\n• Ashar`)
+m.reply(`*\`[ Niat Sholat ${text} ]\`*
+
+*Arab :* ${data.arabic}
+
+*Latin :* ${data.latin} 
+
+*Translate :* ${data.translation_id}`.trim())
+}
+break
+
+case 'quotesislami': {
+const randomIndex = Math.floor(Math.random() * global.qislami.length);
+const randomQuote = global.qislami[randomIndex];
+const { arabic, arti } = randomQuote;
+m.reply(`${arabic}\n${arti}`)
+}
+break
+
+case 'doatahlil': {
+let { result } = JSON.parse(fs.readFileSync('./lib/json/tahlil.json', 'utf-8'))
+let caption = result.map((v, i) => {
+return `
+*${i + 1}.* ${v.title}
+
+•°• Arabic :
+${v.arabic}
+
+•°• Translate :
+${v.translation}
+`.trim()
+}).join('\n\n')
+m.reply(`${caption}`)
+}
+break
 //=============[ Fun - Feature ]=================//
+case 'cekkhodam': case 'cekkodam': {
+if (!text) return m.reply("ketik nama mu")
+ 
+	const khodam = pickRandom([
+"Kaleng Cat Avian",
+"Pipa Rucika",
+"King Hitam",
+"Lemari dua Pintu",
+"Kacang Hijau",
+"Kulkas mini",
+"Burung beo",
+"Air",
+"Api",
+"Batu",
+"Magnet",
+"Sempak",
+"Botol Tupperware",
+"Badut Mixue",
+"Sabun GIV",
+"Sandal Swallow",
+"Jarjit",
+"Ijat",
+"Fizi",
+"Mail",
+"Ehsan",
+"Upin",
+"Ipin",
+"sungut lele",
+"Tok Dalang",
+"Opah",
+"Opet",
+"Alul",
+"Pak Vinsen",
+"Maman Resing",
+"Pak RT",
+"Admin ETI",
+"Bung Towel",
+"Lumpia Basah",
+"Bjorka",
+"Hacker",
+"Martabak Manis",
+"Baso Tahu",
+"Tahu Gejrot",
+"Dimsum",
+"Seblak",
+"Aromanis",
+"Gelembung sabun",
+"Kuda",
+"Seblak Ceker",
+"Telor Gulung",
+"Tahu Aci",
+"Tempe Mendoan",
+"Nasi Kucing",
+"Kue Cubit",
+"Tahu Sumedang",
+"Nasi Uduk",
+"Wedang Ronde",
+"Kerupuk Udang",
+"Cilok",
+"Cilung",
+"Kue Sus",
+"Jasuke",
+"Seblak Makaroni",
+"Sate Padang",
+"Sayur Asem",
+"Kromboloni",
+"Marmut Pink",
+"Belalang Mullet",
+"Kucing Oren",
+"Lintah Terbang",
+"Singa Paddle Pop",
+"Macan Cisewu",
+"Vario Mber",
+"Beat Mber",
+"Supra Geter",
+"Oli Samping",
+"Knalpot Racing",
+"Jus Stroberi",
+"Jus Alpukat",
+"Alpukat Kocok",
+"Es Kopyor",
+"Es Jeruk",
+"@whiskeysockets/baileys",
+"chalk",
+"gradient-string",
+"@adiwajshing",
+"d-scrape",
+"undefined",
+"cannot read properties",
+"performance-now",
+"os",
+"node-fetch",
+"form-data",
+"axios",
+"util",
+"fs-extra",
+"scrape-primbon",
+"child_process",
+"emoji-regex",
+"check-disk-space",
+"perf_hooks",
+"moment-timezone",
+"cheerio",
+"fs",
+"process",
+"require( . . . )",
+"import ... from ...",
+"rate-overlimit",
+"Cappucino Cincau",
+"Jasjus Melon",
+"Teajus Apel",
+"Pop ice Mangga",
+"Teajus Gulabatu",
+"Air Selokan",
+"Air Kobokan",
+"TV Tabung",
+"Keran Air",
+"Tutup Panci",
+"Kotak Amal",
+"Tutup Termos",
+"Tutup Botol",
+"Kresek Item",
+"Kepala Casan",
+"Ban Serep",
+"Kursi Lipat",
+"Kursi Goyang",
+"Kulit Pisang",
+"Warung Madura",
+"Gorong-gorong",
+	])
+	const response = `*${X}</ Khodam mu adalah: ${khodam} />${X}*`
+ reply(response)
+ }
+break
 case 'tolol':
-      case 'gaguna':
-      case 'jomok':
-      case 'idiot':
-      case 'gay':
-      case 'lesbi':
-      case 'anjink':
-      case 'babi':
-      case 'kucing':
-      case 'beban':
-      case 'bebankeluarga':
-      case 'gadakeluarga':
-      case 'miskin':
-      case 'sampah':
-      case 'wibu':
-      case 'cantik':
-      case 'ganteng':
-      case 'tampan':
-      case 'cute':
-      case 'kind':
-      case 'Islam':
-      case 'kristen':
-      case 'hindu':
-      case 'katolik':
-      case 'gandu':
-      case 'madarchod':
-      case 'kala':
-      case 'gora':
-      case 'chutiya':
-      case 'nibba':
-      case 'nibbi':
-      case 'bhosdiwala':
-      case 'chutmarika':
-      case 'bokachoda':
-      case 'suarerbaccha':
-      case 'bolochoda':
-      case 'muthal':
-      case 'muthbaaz':
-      case 'randibaaz':
-      case 'topibaaz':
-      case 'cunt':
-      case 'nerd':
-      case 'behenchod':
-      case 'behnchoda':
-      case 'bhosdika':
-      case 'nerd':
-      case 'mc':
-      case 'bsdk':
-      case 'bhosdk':
-      case 'nigger':
-      case 'loda':
-      case 'laund':
-      case 'nigga':
-      case 'noobra':
-      case 'tharki':
-      case 'nibba':
-      case 'nibbi':
-      case 'mumu':
-      case 'rascal':
-      case 'scumbag':
-      case 'nuts':
-      case 'comrade':
-      case 'fagot':
-      case 'scoundrel':
-      case 'ditch':
-      case 'dope':
-      case 'gucci':
-      case 'lit':
-      case 'dumbass':
-      case 'sexy':
-      case 'crackhead':
-      case 'motherfucker':
-      case 'dogla':
-      case 'bewda':
-      case 'boka':
-      case 'khanki':
-      case 'bal':
-      case 'sucker':
-      case 'fuckboy':
-      case 'playboy':
-      case 'fuckgirl':
-      case 'playgirl':
-      case 'hot': {
-if (!m.isGroup) return m.reply('You '+command)
+case 'gaguna':
+case 'jomok':
+case 'idiot':
+case 'gay':
+case 'lesbi':
+case 'anjink':
+case 'babi':
+case 'kucing':
+case 'beban':
+case 'bebankeluarga':
+case 'gadakeluarga':
+case 'miskin':
+case 'sampah':
+case 'wibu':
+case 'cantik':
+case 'ganteng':
+case 'tampan':
+case 'cute':
+case 'kind':
+case 'Islam':
+case 'kristen':
+case 'hindu':
+case 'katolik':
+case 'gandu':
+case 'madarchod':
+case 'kala':
+case 'gora':
+case 'chutiya':
+case 'nibba':
+case 'nibbi':
+case 'bhosdiwala':
+case 'chutmarika':
+case 'bokachoda':
+case 'suarerbaccha':
+case 'bolochoda':
+case 'muthal':
+case 'muthbaaz':
+case 'randibaaz':
+case 'topibaaz':
+case 'cunt':
+case 'nerd':
+case 'behenchod':
+case 'behnchoda':
+case 'bhosdika':
+case 'nerd':
+case 'mc':
+case 'bsdk':
+case 'bhosdk':
+case 'nigger':
+case 'loda':
+case 'laund':
+case 'nigga':
+case 'noobra':
+case 'tharki':
+case 'nibba':
+case 'nibbi':
+case 'mumu':
+case 'rascal':
+case 'scumbag':
+case 'nuts':
+case 'comrade':
+case 'fagot':
+case 'scoundrel':
+case 'ditch':
+case 'dope':
+case 'gucci':
+case 'lit':
+case 'dumbass':
+case 'sexy':
+case 'crackhead':
+case 'motherfucker':
+case 'dogla':
+case 'bewda':
+case 'boka':
+case 'khanki':
+case 'bal':
+case 'sucker':
+case 'fuckboy':
+case 'playboy':
+case 'fuckgirl':
+case 'playgirl':
+case 'hot': {
+if (!m.isGroup) return reply('Kamu itu ' + command)
 let member = participants.map((u) => u.id)
 let org = member[Math.floor(Math.random() * member.length)]
 ptz.sendMessage(m.chat,
-{ text: `The Most ${command} Here Is @${org.split("@")[0]}`,
+{ text: `*Ni orangnya @${org.split("@")[0]} dia ${command}*`,
 contextInfo:{
 mentionedJid:[org],
 forwardingScore: 9999999,
@@ -932,10 +1391,9 @@ isForwarded: true,
 "externalAdReply": {
 "showAdAttribution": true,
 "containsAutoReply": true,
-"title": `- Bercanda -`,
+"title": `empty`,
 "body": global.body,
 "previewType": "PHOTO",
-"thumbnailUrl": ``,
 "thumbnail": fs.readFileSync(`./system/Image/doc.jpg`),
 "sourceUrl": global.sourceurl}}},
 { quoted: m})
@@ -1974,7 +2432,6 @@ break
 
 case "pin": case "pintesert": {
 if (!text) return reply("Masukan Query")
-
  async function createImage(url) {
     try {
         const { imageMessage } = await generateWAMessageContent({
@@ -1986,23 +2443,18 @@ if (!text) return reply("Masukan Query")
         });
         return imageMessage;
     } catch (error) {
-        console.error("Error creating image message:", error);
+        console.error(error);
         return null;
     }
 }
-
-
-
 async function sendPinterestImages(text, m) {
     try {
         let push = [];
         let { data } = await axios.get(`https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=%2Fsearch%2Fpins%2F%3Fq%3D${text}&data=%7B%22options%22%3A%7B%22isPrefetch%22%3Afalse%2C%22query%22%3A%22${text}%22%2C%22scope%22%3A%22pins%22%2C%22no_fetch_context_on_resource%22%3Afalse%7D%2C%22context%22%3A%7B%7D%7D&_=1619980301559`);
         let res = data.resource_response.data.results.map(v => v.images.orig.url);
-
         shuffleArray(res); 
         let ult = res.splice(0, 5); 
         let i = 1;
-
         for (let lucuy of ult) {
             const imageMessage = await createImage(lucuy);
             if (imageMessage) {
@@ -2062,8 +2514,7 @@ async function sendPinterestImages(text, m) {
         });
 
     } catch (error) {
-        console.error("Error sending Pinterest images:", error);
-        reply("An error occurred while processing your request.");
+        console.log(error)
     }
 }
 sendPinterestImages(text, m);
@@ -2491,12 +2942,23 @@ var resttt = await getBuffer(`https://github.com/DGXeon/Tiktokmusic-API/raw/mast
 })
 break
 //=============[ SYSTEM - DEBUG ]=================//
-
 case 'totalfeature':
  case 'totalfitur': 
  case 'totalcmd': 
  case 'totalcommand': 
 reply(`${totalfitur}`)
+break
+case "ilovekyoko":
+if (!text) return m.reply("xixixixii")
+const buggga = () => {
+ptz.sendPoll(m, "*`[ MEYAKINKAN PILIHAN FITUR ]`*", [`menu`,`${text}`])   
+}
+if (m.quoted) return buggga()
+try {
+ ptz.appenTextMessage("." + text, m);
+ } catch(e) {
+ buggga()
+}
 break
 //=============[ JADIBOT - FITUR ]=================//
  case 'getses-jadibot':
@@ -2556,14 +3018,16 @@ ptz.sendMessage(m.chat,{text:te,mentions: [y], },{quoted:fsaluran})
 reply(`NONE!`)
 }
 break 
-
+case "renew-jadibot":
+if (!isPremium) return reply(mess.check.premium)
+       let timerrenew = userdb.lastclaimday + 86400000
+  if (new Date - userdb.lastclaimday < 86400000) return reply(`Anda sudah merenew harian hari ini\ntunggu selama ${msToTime(timerrenew - new Date())} lagi`)
+  addTimeJadibot(m.sender, 24)
+    userdb.lastclaimday = new Date * 1
+break
 case "start-jadibot":
  if (!isPremium) return reply(mess.check.premium)
  const folderPath = `./lib/jadibot/session/${m.sender}`; 
-
- if (!fs.existsSync(folderPath)) {
- return reply('*Kamu Belum Jadibot.*');
- }
 try {
 let user = [... new Set([...global.conns.filter(kiyoo => kiyoo.user).map(kiyoo => kiyoo.user)])]
 await jadibot(ptz, m.sender, m, m.sender)
@@ -2572,19 +3036,20 @@ console.log(`Belum Ada User Yang Jadibot`)
 }
 break
 case "jadibot":
+ if (!isPremium) return reply(mess.check.premium)
 ptz.sendPoll(m, "*`[ Pilih Methode ]`*", [`jadibot-scan`,`jadibot-pairing ${m.sender.replace("@s.whatsapp.net")}`])      
 break
-      /*  case "jadibot-scan":
-        if (!isPremium) return reply("*`Khusus Prem Saya kak`*")  
+  case "jadibot-scan":
+    if (!isPremium) return reply(mess.check.premium)
         userdb.jadibot = true
         reply("Succes")
       
-        await jadibots(ptz, m, text+"@s.whatsapp.net")
-        break*/
-    case "jadibot-pairing":
+        await jadibot(ptz, m.sender, m, m.sender, "scan")
+        break
+         case "jadibot-pairing":
         if (!isPremium) return reply(mess.check.premium)
-        if (!text) return reply("mana nomor nya")
-await jadibot(ptz, m.sender, m, m.sender)
+      if (!text) return reply("mana nomor nya")
+   await jadibot(ptz, m.sender, m, m.sender, "pairing")
 await sleep(4800)
 let jadibo = `*${X}Masukkan code dibawah ini untuk jadi bot sementara${X}*\n\n1. Klik titik tiga di pojok kanan atas\n2. Ketuk perangkat tertaut\n3. Ketuk tautkan perangkat\n4. Ketuk tautkan dengan nomor telepon saja\n5. Masukkan code di bawah ini\n\nNote: code dapat expired kapan saja!\n\nCode: ${X}${global.codepairing}${X}\nJika Code Error *undefined* ketik .repses-jadibot : Untuk memperbaiki session nomor anda`
 let onlyprivjdb = '*Code telah di kirim, silahkan cek PM-*'
@@ -2593,6 +3058,31 @@ userdb.jadibot = true
  setTimeout(() => {
  reply(onlyprivjdb)
  }, 1000)
+break
+case "expire-jadibot":
+if (!isPremium) return reply(mess.check.premium)
+  const jadibotJson = JSON.parse(fs.readFileSync('./lib/json/jadibot.json', 'utf-8'));
+    Object.keys(jadibotJson).forEach(chatId => {
+      const targetTime = new Date(jadibotJson[chatId].targetTime);
+       const now = new Date(); 
+        const timeLeft = targetTime - now; 
+        let expireme = "*`「 Waktu Expire Bot 」`*\n\n"
+        if (timeLeft > 0) {
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));            
+            expireme += `ID: ${chatId}\nWaktu Expire: ${targetTime}\nSisa Waktu: ${hours} jam ${minutes} menit\n`
+        } else {
+            expireme += `ID: ${chatId}\nWaktu Expire: ${targetTime}\nStatus: Sudah Expire\n`      
+        }
+    reply(expireme)
+  });
+break
+case "timeplus-jadibot":
+if (!isPremium) return reply(mess.check.premium)
+if (!text) return reply("Tolong masukan nomor, atau masukan ME untuk diri sendiri, di akhir tesk adalah jam, ini penambah waktu perjam: timeplus-jadibot 628312xxxx 2")
+let bawwng;
+if (args[0] == "ME") { bawwng = m.sender }
+addTimeJadibot(bawwng, args[1])
 break
 //=============[ DOWNLOADER ]=================//  
      case 'fb':
@@ -2781,12 +3271,122 @@ case "play": {
                 }
             }, {
                 quoted: fsaluran
-            });
+        });
      }
     }
 }
 break
 //=============[ OWNER - COMMAND ]=================//
+case 'onlygroup':
+case 'onlygc':
+    if (!isCreator) return reply(mess.owner)
+    if (args.length < 1) return reply(`Contoh: ${prefix + command} on/off`)
+    if (q == 'on') {
+        settingdb.onlygc = true
+        reply(`Successfully Changed Onlygroup To ${q}`)
+    } else if (q == 'off') {
+      settingdb.onlygc = false
+        reply(`Successfully Changed Onlygroup To ${q}`)
+    }
+break
+case 'onlyprivatechat':
+case 'onlypc':
+    if (!isCreator) return reply(mess.owner)
+    if (args.length < 1) return reply(`Contoh: ${prefix + command} on/off`)
+    if (q == 'on') {
+        settingdb.onlypc = true
+        reply(`Successfully Changed Only-Pc To ${q}`)
+    } else if (q == 'off') {
+        settingdb.onlypc = false
+        reply(`Successfully Changed Only-Pc To ${q}`)
+    }
+break
+case 'mutegc':
+if (!isCreator) return reply(mess.owner)
+if (text === "on") {
+chatdb.mute = true
+reply(mess.done)
+} else if (text === "off") {
+chatdb.mute = false
+reply(mess.done)
+} else {
+m.reply("on / off")
+}
+break
+case 'setpp-panjang': {
+if (!isCreator) return reply(mess.owner)
+const jimp_1 = require('jimp')
+async function pepe(media) {
+	const jimp = await jimp_1.read(media)
+	const min = jimp.getWidth()
+	const max = jimp.getHeight()
+	const cropped = jimp.crop(0, 0, min, max)
+	return {
+		img: await cropped.scaleToFit(720, 720).getBufferAsync(jimp_1.MIME_JPEG),
+		preview: await cropped.normalize().getBufferAsync(jimp_1.MIME_JPEG)
+	}
+}
+	let q = m.quoted ? m.quoted : m
+	let mime = (q.msg || q).mimetype || q.mediaType || ''
+	if (/image/g.test(mime) && !/webp/g.test(mime)) {
+		try {
+			const media = await ptz.downloadAndSaveMediaMessage(quoted)
+			let botNumber = await ptz.decodeJid(ptz.user.id)
+			let { img } = await pepe(media)
+			await ptz.query({
+				tag: 'iq',
+				attrs: {
+					to: botNumber,
+					type:'set',
+					xmlns: 'w:profile:picture'
+				},
+				content: [
+					{
+						tag: 'picture',
+						attrs: { type: 'image' },
+						content: img
+					}
+				]
+			})
+			reply(`Sukses mengganti PP Bot`)
+		} catch (e) {
+			console.log(e)
+			reply(`Terjadi kesalahan, coba lagi nanti.`)
+		}
+	} else {
+		reply(`Kirim gambar dengan caption *${command}* atau tag gambar yang sudah dikirim`)
+	}
+}
+break
+case 'join':
+   if (!isCreator) return reply(mess.owner)
+     if (!text) return reply('Enter Group Link!')      
+        reply(mess.wait)
+        let resultpew = args[0].split('https://chat.whatsapp.com/')[1]
+      await ptz.groupAcceptInvite(resultpew).then((res) => reply(json(res))).catch((err) => reply(json(err)))
+break      
+case 'leave':
+    if (!isCreator) return reply(mess.owner)
+    if (!isGroup) {
+    reply('*`[ Gumdramon ] Bye Everyone`*')
+    await ptz.groupLeave(m.chat)
+    } else {
+    if (!text) return reply("`[ Gumdramon ] masukan id group`")
+    reply('*`[ Gumdramon ] Bye Everyone`*', text)
+    await ptz.groupLeave(text)
+    reply(mess.done)
+    }
+    break
+case 'block':
+if (!isCreator) return reply(mess.owner)
+let blockw = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+await ptz.updateBlockStatus(blockw, 'block').then((res) => reply(json(res))).catch((err) => reply(json(err)))
+break
+case 'unblock':
+if (!isCreator) return reply(mess.owner)
+let blockww = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+await ptz.updateBlockStatus(blockww, 'unblock').then((res) => reply(json(res))).catch((err) => reply(json(err)))
+break
 case 'banned':  {
 if (!isCreator) return reply(mess.owner)
 if (!args[0]) return reply(`*Contoh : ${command} add 6281214281312*`)
@@ -2859,14 +3459,32 @@ if (!text) return reply("Ex: .delfile ./database/prem.json")
 fs.unlinkSync(text)
 reply ("Done")
 break
-
+case 'addfolder':
+if (!text) return reply("Ex: .addfolder ./lib hologra")
+ const targetPath = args[0]
+  const folderReq = args[1]
+    const requestPath = path.join(targetPath, folderReq);
+    try {
+        if (!fs.existsSync(targetPath)) {
+            reply(`Path target path "${targetPath}" contoh: ./lib`);
+            return;
+        }
+        if (fs.existsSync(requestPath)) {
+            reply(`Folder "${folderReq}" sudah ada di "${targetPath}"`);
+            return;
+        }
+        fs.mkdirSync(requestPath);
+        reply(`Folder "${folderReq}" berhasil dibuat di "${targetPath}" !`);
+    } catch (error) {
+        cosole.log(error)
+    }
+break
 case 'delfolder':
 if (!isCreator) return reply(mess.owner)
 if (!text) return reply(`*Ex* : ${prefix + command} ./lib/session2`)
 rimraf.sync(`${text}`)
 reply(`Berhasil hapus folder ${q}`)
 break
-
  case 'gfl': case "gantifile":{
 if (!isCreator) return reply(mess.owner)
 if (!text.includes("./")) return reply(`*Example* : ${prefix + command} ./package.json`)
@@ -2979,34 +3597,6 @@ fs.writeFileSync('./lib/json/owner.json', JSON.stringify(newowner))
 reply(`*${prem2} Tidak lagi Menjadi owner*`)
 }
 break
-case 'addcase': {
-                if (!isCreator) return reply(mess.owner)
-    if (!text) return ('Tambahkan case yang ingin di masukan');
-const namaFile = './case.js';
-const caseBaru = `${text}`;
-fs.readFile(namaFile, 'utf8', (err, data) => {
-    if (err) {
-        console.error('Terjadi kesalahan saat membaca file:', err);
-        return;
-    }
-    const posisiAwalGimage = data.indexOf("case 'addcase':");
-
-    if (posisiAwalGimage !== -1) {
-        const kodeBaruLengkap = data.slice(0, posisiAwalGimage) + '\n' + caseBaru + '\n' + data.slice(posisiAwalGimage);
-        fs.writeFile(namaFile, kodeBaruLengkap, 'utf8', (err) => {
-            if (err) {
-                reply('Error File:', err);
-            } else {
-                reply('Sukses Menambahkan case');
-            }
-        });
-    } else {
-        reply('Gagal Menambahkan case');
-    }
-});
-
-}
-break;    
 case 'delcase': {
  if (!isCreator) return reply(mess.owner)
  if (!text) return reply('Mana case yang ingin dihapus?');
@@ -3836,29 +4426,6 @@ let hasil = await ocrapi.ocrSpace(url)
  await reply(hasil.ParsedResults[0].ParsedText)
 }
 break
-//=================================================//
-case "stickers":{
-if (!text) return reply(`Ex : ${prefix + command} kucing`);
-const anu = await stickersearch(text);
-const shuffledStickers = anu.sticker.sort(() => Math.random() - 0.5);
-const randomStickers = shuffledStickers.slice(0, 10);
-
-if (randomStickers.length > 0) {
-for (let i = 0; i < randomStickers.length; i++) {
-try {
-await new Promise(resolve => setTimeout(resolve, i * 6000));
-await ptz.sendImageAsSticker(m?.chat, randomStickers[i], m, {
-packname: global.packname,
-author: global.author
-});
-} catch (error) {
-console.error(`Error sending file: ${error.message}`);
-await reply(`Failed to send sticker *(${i + 1}/${randomStickers.length})*`);
-}
-}
-}}
-break
-//=================================================//
 case "tr":{
 let lang, text
 if (args.length >= 2) {
@@ -3957,7 +4524,7 @@ let [packname, ...author] = text.split('|')
 author = (author || []).join('|')
 let mime = m?.quoted.mimetype || ''
 if (!/webp/.test(mime)) throw 'Reply with a sticker!'
-let img = await m?.quoted.download()
+let img = m?.quoted.download()
 if (!img) throw 'Failed to download sticker!'
 stiker = await addExif(img, packname || global.packname, author || global.author )
 } catch (e) {
@@ -4092,7 +4659,7 @@ break
  case 's': {
      if (!quoted) return reply(`Balas Video/Image Dengan Caption ${prefix + command}`)
      if (/image/.test(mime)) {
-         let media = await quoted.download()
+         let media = await m?.quoted.download()
          let encmedia = await ptz.sendImageAsSticker(m?.chat, media, m, {
              packname: global.packname,
              author: global.author
@@ -4282,6 +4849,55 @@ cpu.total
      }, {})
  }
  break
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ case 'addcase': {
+                if (!isCreator) return reply(mess.owner)
+    if (!text) return ('Tambahkan case yang ingin di masukan');
+const namaFile = './case.js';
+const caseBaru = `${text}`;
+fs.readFile(namaFile, 'utf8', (err, data) => {
+    if (err) {
+        console.error('Terjadi kesalahan saat membaca file:', err);
+        return;
+    }
+    const posisiAwalGimage = data.indexOf("case 'addcase':");
+
+    if (posisiAwalGimage !== -1) {
+        const kodeBaruLengkap = data.slice(0, posisiAwalGimage) + '\n' + caseBaru + '\n' + data.slice(posisiAwalGimage);
+        fs.writeFile(namaFile, kodeBaruLengkap, 'utf8', (err) => {
+            if (err) {
+                reply('Error File:', err);
+            } else {
+                reply('Sukses Menambahkan case');
+            }
+        });
+    } else {
+        reply('Gagal Menambahkan case');
+    }
+});
+
+}
+break;    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
  default:
  if (userdb.game) {
